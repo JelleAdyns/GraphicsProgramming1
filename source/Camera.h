@@ -2,6 +2,7 @@
 #include <cassert>
 #include <SDL_keyboard.h>
 #include <SDL_mouse.h>
+#include <iostream>
 
 #include "Math.h"
 #include "Timer.h"
@@ -22,7 +23,8 @@ namespace dae
 		Vector3 origin{};
 		float fovAngle{90.f};
 
-		Vector3 forward{Vector3::UnitZ};
+		Vector3 forward{ 0.266f,-0.453f,0.86f };
+		//Vector3 forward{ Vector3::UnitZ };
 		Vector3 up{Vector3::UnitY};
 		Vector3 right{Vector3::UnitX};
 
@@ -35,8 +37,20 @@ namespace dae
 		Matrix CalculateCameraToWorld()
 		{
 			//todo: W2
-			assert(false && "Not Implemented Yet");
-			return {};
+			
+			right = Vector3::Cross(Vector3::UnitY, forward).Normalized();
+			up = Vector3::Cross(forward, right).Normalized();
+
+			return 
+			{
+				Matrix
+				{
+					{right, 0},
+					{up, 0},
+					{forward, 0},
+					{origin, 1}
+				}
+			};
 		}
 
 		void Update(Timer* pTimer)
@@ -52,6 +66,11 @@ namespace dae
 			const uint32_t mouseState = SDL_GetRelativeMouseState(&mouseX, &mouseY);
 
 			//todo: W2
+			cameraToWorld = CalculateCameraToWorld();
+			if (mouseState == SDL_BUTTON(3))
+			{
+				std::cout << "halllokes" << std::endl;
+			}
 			//assert(false && "Not Implemented Yet");
 		}
 	};

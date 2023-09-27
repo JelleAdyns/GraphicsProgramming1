@@ -15,19 +15,18 @@ namespace dae
 			//todo W1
 			const Vector3 fromSphereToRayOrigin{  ray.origin - sphere.origin };
 
-			const float a{ Vector3::Dot(ray.direction, ray.direction) };
-			const float b{ Vector3::Dot(2*ray.direction, fromSphereToRayOrigin) };
+			//const float a{ Vector3::Dot(ray.direction, ray.direction) };
+			const float b{ Vector3::Dot(ray.direction, fromSphereToRayOrigin) };
 			const float c{ Vector3::Dot(fromSphereToRayOrigin, fromSphereToRayOrigin) - sphere.radius * sphere.radius};
 			
-			float discriminant{ b * b - 4 * a * c };
+			float discriminant{ b * b -  c };
 
-			bool isHit{ discriminant > 0 };
-			
-			if(isHit)
+			if (discriminant <= 0) return false;
+			else
 			{
 				const float squareRoot{ sqrt(discriminant) };
 
-				float t{ (-b - squareRoot) / 2 * a };
+				float t{ (-b - squareRoot) };
 
 				if (t >= ray.min && t <= hitRecord.t)
 				{
@@ -41,8 +40,8 @@ namespace dae
 					}
 					return true;
 				}
+				return false;
 			}
-			return false;
 
 		}
 
@@ -57,9 +56,12 @@ namespace dae
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			//todo W1
-			//const Vector3 fromRayToPlaneOrigin{  };
 
-			const float t{ Vector3::Dot(plane.origin - ray.origin, plane.normal) / Vector3::Dot(ray.direction, plane.normal) };
+			const float dotValue{ Vector3::Dot(ray.direction, plane.normal) };
+
+			if (dotValue >= 0) return false;
+
+			const float t{ Vector3::Dot(plane.origin - ray.origin, plane.normal) / dotValue  };
 
 			if (t < ray.min || t > hitRecord.t) return false;
 			else

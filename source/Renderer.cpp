@@ -5,7 +5,6 @@
 //Project includes
 #include "Renderer.h"
 #include "Math.h"
-#include "Matrix.h"
 #include "Material.h"
 #include "Scene.h"
 #include "Utils.h"
@@ -19,6 +18,7 @@ Renderer::Renderer(SDL_Window * pWindow) :
 	//Initialize
 	SDL_GetWindowSize(pWindow, &m_Width, &m_Height);
 	m_pBufferPixels = static_cast<uint32_t*>(m_pBuffer->pixels);
+	
 }
 
 void Renderer::Render(Scene* pScene) const
@@ -28,32 +28,34 @@ void Renderer::Render(Scene* pScene) const
 	auto& lights = pScene->GetLights();
 
 	float ascpectRatio{ float(m_Width) / m_Height };
-
-	Vector3 direction{};
-	Ray ray{ {0,0,0}, direction };
+	float fovScale{ tan(TO_RADIANS * camera.fovAngle) };
 
 	float z{ 1.f };
-	//Sphere sphere{ Vector3{0,0,100}, 50, 0 };
+
+	Vector3 direction{};
+	Ray ray{ camera.origin, direction };
 
 
 	for (int px{}; px < m_Width; ++px)
 	{
-		float x{ (2 * (px + 0.5f) / m_Width - 1) * ascpectRatio };
+		float x{ (2 * (px + 0.5f) / m_Width - 1) * ascpectRatio * fovScale};
 
 		for (int py{}; py < m_Height; ++py)
 		{
 	
-			float y{ 1 - 2 * (py + 0.5f) / m_Height };
+			float y{ (1 - 2 * (py + 0.5f) / m_Height)*fovScale };
 			
 			direction.x = x;
 			direction.y = y;
 			direction.z = z;
-			direction.Normalize();
 
+			direction = (camera.cameraToWorld.TransformVector(direction)) ;
+
+			direction.Normalize();
 			ray.direction = direction;
 			ColorRGB finalColor{ };
 			HitRecord closestHit{};
-			//GeometryUtils::HitTest_Sphere(sphere, ray, closestHit);
+
 			pScene->GetClosestHit(ray, closestHit);
 			if (closestHit.didHit)
 			{
