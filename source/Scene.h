@@ -31,6 +31,8 @@ namespace dae
 		virtual void Update(dae::Timer* pTimer)
 		{
 			m_Camera.Update(pTimer);
+
+			m_CameraSphere->origin = m_Camera.origin;
 		}
 
 		Camera& GetCamera() { return m_Camera; }
@@ -53,6 +55,8 @@ namespace dae
 
 		Camera m_Camera{};
 
+		Sphere* m_CameraSphere{};
+
 		Sphere* AddSphere(const Vector3& origin, float radius, unsigned char materialIndex = 0);
 		Plane* AddPlane(const Vector3& origin, const Vector3& normal, unsigned char materialIndex = 0);
 		TriangleMesh* AddTriangleMesh(TriangleCullMode cullMode, unsigned char materialIndex = 0);
@@ -74,6 +78,22 @@ namespace dae
 		Scene_W1(Scene_W1&&) noexcept = delete;
 		Scene_W1& operator=(const Scene_W1&) = delete;
 		Scene_W1& operator=(Scene_W1&&) noexcept = delete;
+
+		void Initialize() override;
+	};
+
+	//+++++++++++++++++++++++++++++++++++++++++
+	//WEEK 2 Test Scene
+	class Scene_W2 final : public Scene
+	{
+	public:
+		Scene_W2() = default;
+		~Scene_W2() override = default;
+
+		Scene_W2(const Scene_W2&) = delete;
+		Scene_W2(Scene_W2&&) noexcept = delete;
+		Scene_W2& operator=(const Scene_W2&) = delete;
+		Scene_W2& operator=(Scene_W2&&) noexcept = delete;
 
 		void Initialize() override;
 	};

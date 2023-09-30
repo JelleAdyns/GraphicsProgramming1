@@ -15,35 +15,30 @@ namespace dae
 			//todo W1
 			const Vector3 fromSphereToRayOrigin{  ray.origin - sphere.origin };
 
-			const float a{ Vector3::Dot(ray.direction, ray.direction) };
-			const float b{ Vector3::Dot(2*ray.direction, fromSphereToRayOrigin) };
+			//const float a{ Vector3::Dot(ray.direction, ray.direction) };
+			const float b{ Vector3::Dot(ray.direction, fromSphereToRayOrigin) };
 			const float c{ Vector3::Dot(fromSphereToRayOrigin, fromSphereToRayOrigin) - sphere.radius * sphere.radius};
 			
-			float discriminant{ b * b - 4 * a * c };
+			float discriminant{ b * b - c };
 
-			bool isHit{ discriminant > 0 };
+			if (discriminant <= 0) return false;
+		
+			const float squareRoot{ sqrt(discriminant) };
+
+			float t{ (-b - squareRoot) };
+
+			if (t < ray.min || t > ray.max || t > hitRecord.t) return false;
 			
-			if(isHit)
+			if (!ignoreHitRecord)
 			{
-				const float squareRoot{ sqrt(discriminant) };
-
-				float t{ (-b - squareRoot) / 2 * a };
-
-				if (t >= ray.min && t <= hitRecord.t)
-				{
-					if (!ignoreHitRecord)
-					{
-						hitRecord.t = t;
-						hitRecord.didHit = true;
-						hitRecord.origin = ray.origin + ray.direction * t;
-						hitRecord.normal = (hitRecord.origin - sphere.origin) / sphere.radius;
-						hitRecord.materialIndex = sphere.materialIndex;
-					}
-					return true;
-				}
+				hitRecord.t = t;
+				hitRecord.didHit = true;
+				hitRecord.origin = ray.origin + ray.direction * t;
+				hitRecord.normal = (hitRecord.origin - sphere.origin) / sphere.radius;
+				hitRecord.materialIndex = sphere.materialIndex;
 			}
-			return false;
 
+			return true;
 		}
 
 		inline bool HitTest_Sphere(const Sphere& sphere, const Ray& ray)
@@ -58,21 +53,24 @@ namespace dae
 		{
 			//todo W1
 			//const Vector3 fromRayToPlaneOrigin{  };
+			const float dotValue{ Vector3::Dot(ray.direction, plane.normal) };
 
-			const float t{ Vector3::Dot(plane.origin - ray.origin, plane.normal) / Vector3::Dot(ray.direction, plane.normal) };
+			if (dotValue >= 0) return false;
 
-			if (t < ray.min || t > hitRecord.t) return false;
-			else
+			const float t{ Vector3::Dot(plane.origin - ray.origin, plane.normal) / dotValue };
+
+			if (t < ray.min || t > ray.max || t > hitRecord.t) return false;
+
+			if(!ignoreHitRecord)
 			{
-				if(!ignoreHitRecord)
-				{
-					hitRecord.t = t;
-					hitRecord.didHit = true;
-					hitRecord.origin = ray.origin + ray.direction * t;
-					hitRecord.materialIndex = plane.materialIndex;
-				}
-				return true;
+				hitRecord.t = t;
+				hitRecord.didHit = true;
+				hitRecord.origin = ray.origin + ray.direction * t;
+				hitRecord.normal = plane.normal;
+				hitRecord.materialIndex = plane.materialIndex;
 			}
+
+			return true;
 		}
 
 		inline bool HitTest_Plane(const Plane& plane, const Ray& ray)
@@ -118,7 +116,16 @@ namespace dae
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
 			//todo W3
-			assert(false && "No Implemented Yet!");
+			Ray lightPos{  };
+			switch (light.type)
+			{
+			case LightType::Point:
+				return light.origin - origin;
+				break;
+			case LightType::Directional:
+				return Vector3{0, lightPos.max, 0 };
+				break;
+			}
 			return {};
 		}
 
