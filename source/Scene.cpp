@@ -24,7 +24,6 @@ namespace dae {
 		}
 
 		m_Materials.clear();
-		m_CameraSphere = nullptr;
 	}
 
 	void dae::Scene::GetClosestHit(const Ray& ray, HitRecord& closestHit) const
@@ -135,7 +134,7 @@ namespace dae {
 		AddSphere({ -25.f, 0.f, 100.f }, 50.f, matId_Solid_Red);
 		AddSphere({ 25.f, 0.f, 100.f }, 50.f, matId_Solid_Blue);
 
-		m_CameraSphere = AddSphere(m_Camera.origin, .75f, matId_Solid_Blue);
+		m_Camera.cameraSphere = AddSphere(m_Camera.origin, .75f, matId_Solid_Blue);
 		//Plane
 		AddPlane({ -75.f, 0.f, 0.f }, { 1.f, 0.f,0.f }, matId_Solid_Green);
 		AddPlane({ 75.f, 0.f, 0.f }, { -1.f, 0.f,0.f }, matId_Solid_Green);
@@ -168,7 +167,7 @@ namespace dae {
 		AddSphere({ 0.f, 3.f, 0.f }, .75f, matId_Solid_Red);
 		AddSphere({ 1.75f, 3.f, 0.f }, .75f, matId_Solid_Blue);
 
-		m_CameraSphere = AddSphere(m_Camera.origin, .75f, matId_Solid_Blue);
+		m_Camera.cameraSphere = AddSphere(m_Camera.origin, .75f, matId_Solid_Blue);
 
 		//Plane
 		AddPlane({ -5.f, 1.f, 0.f }, { 1.f, 0.f, 0.f }, matId_Solid_Green);

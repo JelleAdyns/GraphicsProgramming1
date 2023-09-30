@@ -11,7 +11,7 @@ namespace dae
 {
 	struct Camera
 	{
-		Camera() 
+		Camera()
 		{
 			fovScale = tan(TO_RADIANS * fovAngle / 2);
 		};
@@ -20,6 +20,7 @@ namespace dae
 			origin{_origin},
 			fovAngle{_fovAngle}
 		{
+			fovScale = tan(TO_RADIANS * fovAngle / 2);
 		}
 
 
@@ -37,6 +38,8 @@ namespace dae
 		float translateSpeed{ 20.f };
 
 		Matrix cameraToWorld{};
+
+		Sphere* cameraSphere{};
 
 
 		Matrix CalculateCameraToWorld()
@@ -135,6 +138,7 @@ namespace dae
 				if (fovAngle < 0) fovAngle = 0;
 			    fovScale = tan(TO_RADIANS * fovAngle / 2);
 			}
+			cameraSphere->origin = origin;
 		}
 	};
 }

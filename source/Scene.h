@@ -31,8 +31,6 @@ namespace dae
 		virtual void Update(dae::Timer* pTimer)
 		{
 			m_Camera.Update(pTimer);
-
-			m_CameraSphere->origin = m_Camera.origin;
 		}
 
 		Camera& GetCamera() { return m_Camera; }
@@ -54,8 +52,6 @@ namespace dae
 		std::vector<Material*> m_Materials{};
 
 		Camera m_Camera{};
-
-		Sphere* m_CameraSphere{};
 
 		Sphere* AddSphere(const Vector3& origin, float radius, unsigned char materialIndex = 0);
 		Plane* AddPlane(const Vector3& origin, const Vector3& normal, unsigned char materialIndex = 0);
