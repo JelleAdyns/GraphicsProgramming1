@@ -34,7 +34,7 @@ namespace dae
 		float totalPitch{0.f};
 		float totalYaw{0.f};
 
-		float translateSpeed{ 40.f };
+		float translateSpeed{ 20.f };
 
 		Matrix cameraToWorld{};
 

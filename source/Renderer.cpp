@@ -31,11 +31,6 @@ void Renderer::Render(Scene* pScene) const
 	
 	float z{ 1.f };
 
-	
-
-
-
-
 	for (int px{}; px < m_Width; ++px)
 	{
 		float x{ (2 * (px + 0.5f) / m_Width - 1) * ascpectRatio * camera.fovScale};
