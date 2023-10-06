@@ -125,15 +125,29 @@ namespace dae
 			case LightType::Directional:
 				return Vector3{0, lightPos.max, 0 };
 				break;
+			default:
+				return{};
+				break;
 			}
-			return {};
 		}
 
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)
 		{
 			//todo W3
-			assert(false && "No Implemented Yet!");
-			return {};
+			const float r{ (light.origin - target).Magnitude()};
+			switch (light.type)
+			{
+			case LightType::Point:
+				return { light.intensity / Square(r) * light.color };
+				break;
+			case LightType::Directional:
+				return { light.intensity * light.color };
+				break;
+			default:
+				return{};
+				break;
+			}
+			
 		}
 	}
 

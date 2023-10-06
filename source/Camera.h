@@ -11,16 +11,12 @@ namespace dae
 {
 	struct Camera
 	{
-		Camera()
-		{
-			fovScale = tan(TO_RADIANS * fovAngle / 2);
-		};
+		Camera() = default;
 
 		Camera(const Vector3& _origin, float _fovAngle):
 			origin{_origin},
 			fovAngle{_fovAngle}
 		{
-			fovScale = tan(TO_RADIANS * fovAngle / 2);
 		}
 
 
@@ -39,7 +35,7 @@ namespace dae
 
 		Matrix cameraToWorld{};
 
-		Sphere* cameraSphere{};
+		//Sphere* cameraSphere{};
 
 
 		Matrix CalculateCameraToWorld()
@@ -76,25 +72,31 @@ namespace dae
 			//todo: W2
 			HandleKeyMovement(pKeyboardState, deltaTime);
 
+			if (mouseState == SDL_BUTTON(3))
+			{
+				if (mouseY != 0)
+				{
+					totalPitch += mouseY;
+					if (totalPitch >= 89) totalPitch = 89;
+					if (totalPitch <= -89) totalPitch = -89;
+					TransformForwardVector();
+				}
+				if (mouseX != 0)
+				{
+					totalYaw += mouseX;
+					TransformForwardVector();
+				}
+			}
 			if (mouseState == SDL_BUTTON(1))
 			{
 				if (mouseY != 0)
 				{
-					totalPitch += mouseY / 2;
-					Matrix finalRotation{ Matrix::CreateRotation(totalPitch * TO_RADIANS, totalYaw * TO_RADIANS, 0) };
-
-					forward = finalRotation.TransformVector(Vector3::UnitZ);
-					forward.Normalize();
-					cameraToWorld = CalculateCameraToWorld();
+					origin += forward * float(-mouseY) * translateSpeed * deltaTime;
 				}
 				if (mouseX != 0)
 				{
-					totalYaw += mouseX / 2;
-					Matrix finalRotation{ Matrix::CreateRotation(totalPitch * TO_RADIANS, totalYaw * TO_RADIANS, 0) };
-
-					forward = finalRotation.TransformVector(Vector3::UnitZ);
-					forward.Normalize();
-					cameraToWorld = CalculateCameraToWorld();
+					totalYaw += mouseX;
+					TransformForwardVector();
 				}
 			}
 			
@@ -126,19 +128,28 @@ namespace dae
 			{
 				origin.y -= translateSpeed * elapsedSec;
 			}
-			if (keys[SDL_SCANCODE_UP])
+			if (keys[SDL_SCANCODE_Z])
 			{
 				fovAngle += translateSpeed * elapsedSec;
 				if (fovAngle > 360) fovAngle = 360;
 			    fovScale = tan(TO_RADIANS * fovAngle / 2);
 			}
-			if (keys[SDL_SCANCODE_DOWN])
+			if (keys[SDL_SCANCODE_C])
 			{
 				fovAngle -= translateSpeed * elapsedSec;
 				if (fovAngle < 0) fovAngle = 0;
 			    fovScale = tan(TO_RADIANS * fovAngle / 2);
 			}
-			cameraSphere->origin = origin;
+			//cameraSphere->origin = origin;
+		}
+
+		void TransformForwardVector()
+		{
+			Matrix finalRotation{ Matrix::CreateRotation(totalPitch * TO_RADIANS, totalYaw * TO_RADIANS, 0) };
+
+			forward = finalRotation.TransformVector(Vector3::UnitZ);
+			forward.Normalize();
+			cameraToWorld = CalculateCameraToWorld();
 		}
 	};
 }
