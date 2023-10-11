@@ -35,8 +35,10 @@ namespace dae
 		static ColorRGB Phong(float ks, float exp, const Vector3& l, const Vector3& v, const Vector3& n)
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			const Vector3 reflection{ l - (2 * std::max(Vector3::Dot(n,l),0.f) * n) };
+			const float cosAlpha{ std::max(0.f, Vector3::Dot(reflection, v)) };
+			const float phong{ pow(cosAlpha, exp) * ks };
+			return { phong, phong, phong };
 		}
 
 		/**
@@ -49,8 +51,9 @@ namespace dae
 		static ColorRGB FresnelFunction_Schlick(const Vector3& h, const Vector3& v, const ColorRGB& f0)
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			const float hDotV{ 1 - std::max(Vector3::Dot(h, v),0.f) };
+			const float power{ hDotV * hDotV * hDotV * hDotV * hDotV };
+			return f0 + (ColorRGB{ 1,1,1 } - f0) * power;
 		}
 
 		/**
@@ -63,8 +66,10 @@ namespace dae
 		static float NormalDistribution_GGX(const Vector3& n, const Vector3& h, float roughness)
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			const float alpha{ roughness * roughness * roughness * roughness};
+			const float nDotH{ std::max(Vector3::Dot(n,h),0.f) };
+			const float brackets{ Square(nDotH * nDotH * (alpha - 1) + 1) };
+			return { alpha / (PI * brackets) };
 		}
 
 
@@ -78,8 +83,9 @@ namespace dae
 		static float GeometryFunction_SchlickGGX(const Vector3& n, const Vector3& v, float roughness)
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			const float nDOtV{ std::max(Vector3::Dot(n,v),0.f) };
+			const float k{ Square(roughness * roughness + 1) / 8 };
+			return {nDOtV/(nDOtV*(1-k)+k)};
 		}
 
 		/**
@@ -93,8 +99,7 @@ namespace dae
 		static float GeometryFunction_Smith(const Vector3& n, const Vector3& v, const Vector3& l, float roughness)
 		{
 			//todo: W3
-			assert(false && "Not Implemented Yet");
-			return {};
+			return {GeometryFunction_SchlickGGX(n,v,roughness)* GeometryFunction_SchlickGGX(n,l,roughness)};
 		}
 
 	}

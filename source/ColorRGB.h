@@ -125,6 +125,7 @@ namespace dae
 		{
 			return *this /= s;
 		}
+
 		#pragma endregion
 	};
 

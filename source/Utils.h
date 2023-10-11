@@ -19,13 +19,13 @@ namespace dae
 			const float b{ Vector3::Dot(ray.direction, fromSphereToRayOrigin) };
 			const float c{ Vector3::Dot(fromSphereToRayOrigin, fromSphereToRayOrigin) - sphere.radius * sphere.radius};
 			
-			float discriminant{ b * b - c };
+			const float discriminant{ b * b - c };
 
 			if (discriminant <= 0) return false;
 		
 			const float squareRoot{ sqrt(discriminant) };
 
-			float t{ (-b - squareRoot) };
+			const float t{ (-b - squareRoot) };
 
 			if (t < ray.min || t > ray.max || t > hitRecord.t) return false;
 			
@@ -116,14 +116,13 @@ namespace dae
 		inline Vector3 GetDirectionToLight(const Light& light, const Vector3 origin)
 		{
 			//todo W3
-			Ray lightPos{  };
 			switch (light.type)
 			{
 			case LightType::Point:
 				return light.origin - origin;
 				break;
 			case LightType::Directional:
-				return Vector3{0, lightPos.max, 0 };
+				return -light.direction;
 				break;
 			default:
 				return{};
@@ -134,11 +133,11 @@ namespace dae
 		inline ColorRGB GetRadiance(const Light& light, const Vector3& target)
 		{
 			//todo W3
-			const float r{ (light.origin - target).Magnitude()};
+			const float rSquared{(light.origin - target).SqrMagnitude()};
 			switch (light.type)
 			{
 			case LightType::Point:
-				return { light.intensity / Square(r) * light.color };
+				return { light.intensity / rSquared * light.color };
 				break;
 			case LightType::Directional:
 				return { light.intensity * light.color };

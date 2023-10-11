@@ -27,23 +27,23 @@ void Renderer::Render(Scene* pScene) const
 	auto& materials = pScene->GetMaterials();
 	auto& lights = pScene->GetLights();
 
-	float ascpectRatio{ float(m_Width) / m_Height };
+	const float ascpectRatio{ float(m_Width) / m_Height };
 	
 	float z{ 1.f };
 
 	for (int px{}; px < m_Width; ++px)
 	{
-		float x{ (2 * (px + 0.5f) / m_Width - 1) * ascpectRatio * camera.fovScale};
+		const float x{ (2 * (px + 0.5f) / m_Width - 1) * ascpectRatio * camera.fovScale};
 
 		for (int py{}; py < m_Height; ++py)
 		{
-			float y{ (1 - 2 * (py + 0.5f) / m_Height) * camera.fovScale };
+			const float y{ (1 - 2 * (py + 0.5f) / m_Height) * camera.fovScale };
 			
 			Vector3 direction{ (camera.cameraToWorld.TransformVector({ x,y,z })) };
 
 			direction.Normalize();
 
-			Ray ray{ camera.origin, direction };
+			const Ray ray{ camera.origin, direction };
 
 			ColorRGB finalColor{};
 			HitRecord closestHit{};
@@ -51,28 +51,58 @@ void Renderer::Render(Scene* pScene) const
 			pScene->GetClosestHit(ray, closestHit);
 			if (closestHit.didHit)
 			{
-				//finalColor = materials[closestHit.materialIndex]->Shade();
 
 				Ray lightRay{ };
 				lightRay.origin = closestHit.origin + closestHit.normal * 0.001f;
 				
-				
-				for (const auto& light : lights)
+				//finalColor = materials[closestHit.materialIndex]->Shade();
+				/*for (const auto& light : lights)
+				{*/
+				for (int i =0; i < lights.size(); ++i)
 				{
-					Vector3 hitToLight{ LightUtils::GetDirectionToLight(light, lightRay.origin) };
-					lightRay.direction = hitToLight.Normalized();
-					lightRay.max = hitToLight.Magnitude();
-					if (!pScene->DoesHit(lightRay))
+					lightRay.direction = LightUtils::GetDirectionToLight(lights[i], lightRay.origin);
+					lightRay.max = lightRay.direction.Normalize();
+
+			
+					if (m_ShadowsEnabled)
 					{
-						/*finalColor *= 0.5f;*/
-						float cosTheta{ Vector3::Dot(closestHit.normal, lightRay.direction) };
-						if (cosTheta > 0)
+						if ((pScene->DoesHit(lightRay) && lights[i].type == LightType::Point)) continue;
+					}
+				
+					switch (m_CurrentLightingMode)
+					{
+						case LightingMode::ObservedArea:
 						{
-							ColorRGB radiance{ LightUtils::GetRadiance(light, lightRay.origin) } ;
-							finalColor += radiance * materials[closestHit.materialIndex]->Shade() * cosTheta;
+							const float cosTheta = Vector3::Dot(closestHit.normal, lightRay.direction);
+							if (cosTheta <= 0) continue;
+							finalColor.r += cosTheta;
+							finalColor.g += cosTheta;
+							finalColor.b += cosTheta;
+							break;
+						}
+						case LightingMode::Radiance:
+						{
+							finalColor += LightUtils::GetRadiance(lights[i], lightRay.origin);
+							break;
+						}
+						case LightingMode::BRDF:
+						{
+							finalColor += materials[closestHit.materialIndex]->Shade(closestHit, lightRay.direction, -direction);
+							break;
+						}
+						case LightingMode::Combined:
+						{
+							const float cosTheta = Vector3::Dot(closestHit.normal, lightRay.direction);
+							if (cosTheta <= 0) continue;
+							ColorRGB radiance{ LightUtils::GetRadiance(lights[i], lightRay.origin) };
+							ColorRGB shade{ materials[closestHit.materialIndex]->Shade(closestHit, lightRay.direction, -direction) };
+							finalColor += radiance * shade * cosTheta;
+							break;
 						}
 					}
+					
 				}
+					
 			}
 			//Update Color in Buffer
 			finalColor.MaxToOne();
@@ -91,4 +121,27 @@ void Renderer::Render(Scene* pScene) const
 bool Renderer::SaveBufferToImage() const
 {
 	return SDL_SaveBMP(m_pBuffer, "RayTracing_Buffer.bmp");
+}
+
+void Renderer::CycleLightingMode()
+{
+	switch (m_CurrentLightingMode)
+	{
+	case LightingMode::ObservedArea:
+		m_CurrentLightingMode = LightingMode::Radiance;
+		std::cout << "RADIANCE ONLY" << std::endl;
+		break;
+	case LightingMode::Radiance:
+		m_CurrentLightingMode = LightingMode::BRDF;
+		std::cout << "BRDF ONLY" << std::endl;
+		break;
+	case LightingMode::BRDF:
+		m_CurrentLightingMode = LightingMode::Combined;
+		std::cout << "COMBINED" << std::endl;
+		break;
+	case LightingMode::Combined:
+		m_CurrentLightingMode = LightingMode::ObservedArea;
+		std::cout << "OBSERVED AREA ONLY" << std::endl;
+		break;
+	}
 }

@@ -31,7 +31,7 @@ namespace dae
 		float totalPitch{0.f};
 		float totalYaw{0.f};
 
-		float translateSpeed{ 20.f };
+		float translateSpeed{ 10.f };
 
 		Matrix cameraToWorld{};
 
@@ -72,7 +72,7 @@ namespace dae
 			//todo: W2
 			HandleKeyMovement(pKeyboardState, deltaTime);
 
-			if (mouseState == SDL_BUTTON(3))
+			if (mouseState == SDL_BUTTON(SDL_BUTTON_RIGHT))
 			{
 				if (mouseY != 0)
 				{
@@ -87,7 +87,7 @@ namespace dae
 					TransformForwardVector();
 				}
 			}
-			if (mouseState == SDL_BUTTON(1))
+			if (mouseState == SDL_BUTTON(SDL_BUTTON_LEFT))
 			{
 				if (mouseY != 0)
 				{
@@ -147,8 +147,7 @@ namespace dae
 		{
 			Matrix finalRotation{ Matrix::CreateRotation(totalPitch * TO_RADIANS, totalYaw * TO_RADIANS, 0) };
 
-			forward = finalRotation.TransformVector(Vector3::UnitZ);
-			forward.Normalize();
+			forward = finalRotation.TransformVector(Vector3::UnitZ).Normalized();
 			cameraToWorld = CalculateCameraToWorld();
 		}
 	};
