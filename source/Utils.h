@@ -27,7 +27,9 @@ namespace dae
 
 			const float t{ (-b - squareRoot) };
 
-			if (t < ray.min || t > ray.max || t > hitRecord.t) return false;
+			if (t < ray.min) return false;
+			if (t > ray.max) return false; 
+			if (t > hitRecord.t) return false;
 			
 			if (!ignoreHitRecord)
 			{
@@ -59,7 +61,9 @@ namespace dae
 
 			const float t{ Vector3::Dot(plane.origin - ray.origin, plane.normal) / dotValue };
 
-			if (t < ray.min || t > ray.max || t > hitRecord.t) return false;
+			if (t < ray.min) return false;
+			if (t > ray.max) return false;
+			if (t > hitRecord.t) return false;
 
 			if(!ignoreHitRecord)
 			{
@@ -107,22 +111,24 @@ namespace dae
 			}
 			const float t{ Vector3::Dot(triangle.v0 - ray.origin, triangle.normal) / dotValue };
 
-			if (t < ray.min || t > ray.max || t > hitRecord.t) return false;
+			if (t < ray.min) return false;
+			if (t > ray.max) return false;
+			if (t > hitRecord.t) return false;
 
 			const Vector3 P{ ray.origin + ray.direction * t };
-			
-			
-			std::vector<Vector3> vecVertices{ triangle.v0, triangle.v1, triangle.v2 };
-			for (int i = 0; i < 3; ++i)
-			{
-				int nextVertex{ i + 1 };
-				if (nextVertex == 3) nextVertex = 0;
-				Vector3 e{ vecVertices[nextVertex] - vecVertices[i] };
-				Vector3 p{ P - vecVertices[i] };
-				
-			if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) < 0) return false;
-			}
 
+			//Won 12 frames with this
+			Vector3 e{ triangle.v1 - triangle.v0 };
+			Vector3 p{ P - triangle.v0 };
+			if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) return false;
+
+			e = triangle.v2 - triangle.v1;
+			p = P - triangle.v1;
+			if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) return false;
+
+			e = triangle.v0 - triangle.v2;
+			p = P - triangle.v2;
+			if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) return false;
 
 			if (!ignoreHitRecord)
 			{
@@ -146,8 +152,74 @@ namespace dae
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray, HitRecord& hitRecord, bool ignoreHitRecord = false)
 		{
 			//todo W5
-			//assert(false && "No Implemented Yet!");
-			return false;
+			bool hit{};
+			HitRecord tempHitRec{};
+			Triangle triangle{};
+			for (int i = 0; i < mesh.normals.size(); ++i)
+			{
+				triangle.v0 = mesh.transformedPositions[mesh.indices[i * 3]];
+				triangle.v1 = mesh.transformedPositions[mesh.indices[i * 3 + 1]];
+				triangle.v2 = mesh.transformedPositions[mesh.indices[i * 3 + 2]];
+				triangle.cullMode = mesh.cullMode;
+				triangle.materialIndex = mesh.materialIndex;
+				triangle.normal = mesh.transformedNormals[i];
+
+
+				const float dotValue{ Vector3::Dot(ray.direction, triangle.normal) };
+				switch (triangle.cullMode)
+				{
+				case TriangleCullMode::FrontFaceCulling:
+					if (ignoreHitRecord)
+					{
+						if (dotValue >= 0) continue;
+					}
+					else if (dotValue <= 0) continue;
+					break;
+				case TriangleCullMode::BackFaceCulling:
+					if (ignoreHitRecord)
+					{
+						if (dotValue <= 0) continue;
+					}
+					else if (dotValue >= 0) continue;
+					break;
+				case TriangleCullMode::NoCulling:
+					if (AreEqual(dotValue, 0)) continue;
+					break;
+				}
+				const float t{ Vector3::Dot(triangle.v0 - ray.origin, triangle.normal) / dotValue };
+
+				if (t < ray.min) continue;
+				if (t > ray.max) continue;
+				if (t > hitRecord.t) continue;
+
+				const Vector3 P{ ray.origin + ray.direction * t };
+
+				//Won 12 frames with this
+				Vector3 e{ triangle.v1 - triangle.v0 };
+				Vector3 p{ P - triangle.v0 };
+				if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) continue;
+
+				e = triangle.v2 - triangle.v1;
+				p = P - triangle.v1;
+				if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) continue;
+
+				e = triangle.v0 - triangle.v2;
+				p = P - triangle.v2;
+				if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) continue;
+
+				if (!ignoreHitRecord)
+				{
+					hitRecord.t = t;
+					hitRecord.didHit = true;
+					hitRecord.origin = P;
+					hitRecord.normal = triangle.normal;
+					hitRecord.materialIndex = triangle.materialIndex;
+				}
+
+				hit = true;
+			}
+
+			return hit;
 		}
 
 		inline bool HitTest_TriangleMesh(const TriangleMesh& mesh, const Ray& ray)

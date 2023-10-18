@@ -51,22 +51,32 @@ void Renderer::Render(Scene* pScene) const
 			pScene->GetClosestHit(ray, closestHit);
 			if (closestHit.didHit)
 			{
-
 				Ray lightRay{ };
 				lightRay.origin = closestHit.origin + closestHit.normal * 0.001f;
 				
-				//finalColor = materials[closestHit.materialIndex]->Shade();
-				/*for (const auto& light : lights)
-				{*/
+				/*if (lights.empty())
+				{
+					const float cosTheta = Vector3::Dot(closestHit.normal, -direction);
+					if (cosTheta > 0)
+					{
+						ColorRGB shade{ materials[closestHit.materialIndex]->Shade(closestHit, -direction, -direction) };
+						finalColor += shade * cosTheta;
+					}
+				}*/
 				for (int i =0; i < lights.size(); ++i)
 				{
 					lightRay.direction = LightUtils::GetDirectionToLight(lights[i], lightRay.origin);
-					lightRay.max = lightRay.direction.Normalize();
+					if (lights[i].type == LightType::Directional)
+					{
+						lightRay.direction.Normalize();
+						lightRay.max = FLT_MAX;
+					}
+					else lightRay.max = lightRay.direction.Normalize();
 
 			
 					if (m_ShadowsEnabled)
 					{
-						if ((pScene->DoesHit(lightRay) && lights[i].type == LightType::Point)) continue;
+						if (pScene->DoesHit(lightRay)) continue;
 					}
 				
 					switch (m_CurrentLightingMode)
