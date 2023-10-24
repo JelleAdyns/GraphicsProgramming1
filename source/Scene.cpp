@@ -369,6 +369,7 @@ namespace dae {
 
 		//pMesh->Translate({ 0.f,1.5f,0.f });
 		//pMesh->RotateY(45);
+		//pMesh->UpdateAABB();
 		//pMesh->UpdateTransforms();
 
 		////OBJ
@@ -384,6 +385,7 @@ namespace dae {
 		pMesh->Scale({ .7f,.7f,.7f });
 		pMesh->Translate({ .0f,1.f,0.f });
 		//No need to Calculate the normals, these are calculated inside the ParseOBJ function
+		pMesh->UpdateAABB();
 		pMesh->UpdateTransforms();
 
 
@@ -429,16 +431,19 @@ namespace dae {
 		m_Meshes[0] = AddTriangleMesh(TriangleCullMode::BackFaceCulling, matLambert_White);
 		m_Meshes[0]->AppendTriangle(baseTriangle, true);
 		m_Meshes[0]->Translate({ -1.75f,4.5f,0.f });
+		m_Meshes[0]->UpdateAABB();
 		m_Meshes[0]->UpdateTransforms();
 
 		m_Meshes[1] = AddTriangleMesh(TriangleCullMode::FrontFaceCulling, matLambert_White);
 		m_Meshes[1]->AppendTriangle(baseTriangle, true);
 		m_Meshes[1]->Translate({ 0.f,4.5f,0.f });
+		m_Meshes[1]->UpdateAABB();
 		m_Meshes[1]->UpdateTransforms();
 
 		m_Meshes[2] = AddTriangleMesh(TriangleCullMode::NoCulling, matLambert_White);
 		m_Meshes[2]->AppendTriangle(baseTriangle, true);
 		m_Meshes[2]->Translate({ 1.75f,4.5f,0.f });
+		m_Meshes[2]->UpdateAABB();
 		m_Meshes[2]->UpdateTransforms();
 
 		AddPointLight(Vector3{ 0.f, 5.f, 5.f }, 50.f, ColorRGB{ 1.f, .61f, .45f }); //Backlight
@@ -481,6 +486,7 @@ namespace dae {
 
 		pMesh->Scale({ 2,2,2 });
 		//No need to Calculate the normals, these are calculated inside the ParseOBJ function
+		pMesh->UpdateAABB();
 		pMesh->UpdateTransforms();
 
 

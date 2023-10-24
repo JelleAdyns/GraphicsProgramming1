@@ -8,7 +8,9 @@
 #include "Material.h"
 #include "Scene.h"
 #include "Utils.h"
+#include <execution>
 
+#define PARALLEL_EXECUTION
 using namespace dae;
 
 Renderer::Renderer(SDL_Window * pWindow) :
@@ -24,110 +26,126 @@ Renderer::Renderer(SDL_Window * pWindow) :
 void Renderer::Render(Scene* pScene) const
 {
 	Camera& camera = pScene->GetCamera();
-	auto& materials = pScene->GetMaterials();
-	auto& lights = pScene->GetLights();
+	const float aspectRatio{ float(m_Width) / m_Height };
 
-	const float ascpectRatio{ float(m_Width) / m_Height };
+#if defined (PARALLEL_EXECUTION)
+	uint32_t amountOfPixels{ uint32_t(m_Width * m_Height) };
+	std::vector<uint32_t> pixelIndices{};
+	pixelIndices.reserve(amountOfPixels);
+	for (uint32_t pixelIndex{}; pixelIndex < amountOfPixels; ++pixelIndex) pixelIndices.emplace_back(pixelIndex);
 	
-	float z{ 1.f };
-
-	for (int px{}; px < m_Width; ++px)
-	{
-		const float x{ (2 * (px + 0.5f) / m_Width - 1) * ascpectRatio * camera.fovScale};
-
-		for (int py{}; py < m_Height; ++py)
+	std::for_each(std::execution::par, pixelIndices.begin(), pixelIndices.end(), [&](int i)
 		{
-			const float y{ (1 - 2 * (py + 0.5f) / m_Height) * camera.fovScale };
-			
-			Vector3 direction{ (camera.cameraToWorld.TransformVector({ x,y,z })) };
+			RenderPixel(pScene, i, camera.fovScale, aspectRatio, camera.cameraToWorld, camera.origin);
+		});
+		
+	
+#else
+	uint32_t amountOfPixels{ uint32_t(m_Width * m_Height) };
 
-			direction.Normalize();
-
-			const Ray ray{ camera.origin, direction };
-
-			ColorRGB finalColor{};
-			HitRecord closestHit{};
-
-			pScene->GetClosestHit(ray, closestHit);
-			if (closestHit.didHit)
-			{
-				Ray lightRay{ };
-				lightRay.origin = closestHit.origin + closestHit.normal * 0.001f;
-				
-				/*if (lights.empty())
-				{
-					const float cosTheta = Vector3::Dot(closestHit.normal, -direction);
-					if (cosTheta > 0)
-					{
-						ColorRGB shade{ materials[closestHit.materialIndex]->Shade(closestHit, -direction, -direction) };
-						finalColor += shade * cosTheta;
-					}
-				}*/
-				for (int i =0; i < lights.size(); ++i)
-				{
-					lightRay.direction = LightUtils::GetDirectionToLight(lights[i], lightRay.origin);
-					if (lights[i].type == LightType::Directional)
-					{
-						lightRay.direction.Normalize();
-						lightRay.max = FLT_MAX;
-					}
-					else lightRay.max = lightRay.direction.Normalize();
-
-			
-					if (m_ShadowsEnabled)
-					{
-						if (pScene->DoesHit(lightRay)) continue;
-					}
-				
-					switch (m_CurrentLightingMode)
-					{
-						case LightingMode::ObservedArea:
-						{
-							const float cosTheta = Vector3::Dot(closestHit.normal, lightRay.direction);
-							if (cosTheta <= 0) continue;
-							finalColor.r += cosTheta;
-							finalColor.g += cosTheta;
-							finalColor.b += cosTheta;
-							break;
-						}
-						case LightingMode::Radiance:
-						{
-							finalColor += LightUtils::GetRadiance(lights[i], lightRay.origin);
-							break;
-						}
-						case LightingMode::BRDF:
-						{
-							finalColor += materials[closestHit.materialIndex]->Shade(closestHit, lightRay.direction, -direction);
-							break;
-						}
-						case LightingMode::Combined:
-						{
-							const float cosTheta = Vector3::Dot(closestHit.normal, lightRay.direction);
-							if (cosTheta <= 0) continue;
-							ColorRGB radiance{ LightUtils::GetRadiance(lights[i], lightRay.origin) };
-							ColorRGB shade{ materials[closestHit.materialIndex]->Shade(closestHit, lightRay.direction, -direction) };
-							finalColor += radiance * shade * cosTheta;
-							break;
-						}
-					}
-					
-				}
-					
-			}
-			//Update Color in Buffer
-			finalColor.MaxToOne();
-
-			m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,
-				static_cast<uint8_t>(finalColor.r * 255),
-				static_cast<uint8_t>(finalColor.g * 255),
-				static_cast<uint8_t>(finalColor.b * 255));
-		}
+	for (uint32_t pixelIndex{}; pixelIndex < amountOfPixels; ++pixelIndex)
+	{
+		RenderPixel(pScene, pixelIndex, camera.fovScale, aspectRatio, camera.cameraToWorld, camera.origin);
 	}
+#endif
+	
+
 	//@END
-	//Update SDL Surface
+	//Update SDL Surface;
 	SDL_UpdateWindowSurface(m_pWindow);
 }
+void Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float aspectRatio, const Matrix& cameraToWorld, const Vector3& cameraOrigin) const
+{
+	const auto& materials{ pScene->GetMaterials() };
+	const auto& lights{ pScene->GetLights() };
+	const uint32_t px{ pixelIndex % m_Width }, py{ pixelIndex / m_Width };
 
+	float z{ 1.f };
+	const float x{ (2 * (px + 0.5f) / m_Width - 1) * aspectRatio * fov };
+	const float y{ (1 - 2 * (py + 0.5f) / m_Height) * fov };
+
+	Vector3 direction{ (cameraToWorld.TransformVector({ x,y,z })) };
+
+	direction.Normalize();
+
+	const Ray ray{ cameraOrigin, direction };
+
+	ColorRGB finalColor{};
+	HitRecord closestHit{};
+
+	pScene->GetClosestHit(ray, closestHit);
+	if (closestHit.didHit)
+	{
+		Ray lightRay{ };
+		lightRay.origin = closestHit.origin + closestHit.normal * 0.001f;
+
+		/*if (lights.empty())
+		{
+			const float cosTheta = Vector3::Dot(closestHit.normal, -direction);
+			if (cosTheta > 0)
+			{
+				ColorRGB shade{ materials[closestHit.materialIndex]->Shade(closestHit, -direction, -direction) };
+				finalColor += shade * cosTheta;
+			}
+		}*/
+		for (int i = 0; i < lights.size(); ++i)
+		{
+			lightRay.direction = LightUtils::GetDirectionToLight(lights[i], lightRay.origin);
+			if (lights[i].type == LightType::Directional)
+			{
+				lightRay.direction.Normalize();
+				lightRay.max = FLT_MAX;
+			}
+			else lightRay.max = lightRay.direction.Normalize();
+
+
+			if (m_ShadowsEnabled)
+			{
+				if (pScene->DoesHit(lightRay)) continue;
+			}
+
+			switch (m_CurrentLightingMode)
+			{
+			case LightingMode::ObservedArea:
+			{
+				const float cosTheta = Vector3::Dot(closestHit.normal, lightRay.direction);
+				if (cosTheta <= 0) continue;
+				finalColor.r += cosTheta;
+				finalColor.g += cosTheta;
+				finalColor.b += cosTheta;
+				break;
+			}
+			case LightingMode::Radiance:
+			{
+				finalColor += LightUtils::GetRadiance(lights[i], lightRay.origin);
+				break;
+			}
+			case LightingMode::BRDF:
+			{
+				finalColor += materials[closestHit.materialIndex]->Shade(closestHit, lightRay.direction, -direction);
+				break;
+			}
+			case LightingMode::Combined:
+			{
+				const float cosTheta = Vector3::Dot(closestHit.normal, lightRay.direction);
+				if (cosTheta <= 0) continue;
+				ColorRGB radiance{ LightUtils::GetRadiance(lights[i], lightRay.origin) };
+				ColorRGB shade{ materials[closestHit.materialIndex]->Shade(closestHit, lightRay.direction, -direction) };
+				finalColor += radiance * shade * cosTheta;
+				break;
+			}
+			}
+		}
+	}
+	finalColor.MaxToOne();
+
+	m_pBufferPixels[px + (py * m_Width)] = SDL_MapRGB(m_pBuffer->format,
+		static_cast<uint8_t>(finalColor.r * 255),
+		static_cast<uint8_t>(finalColor.g * 255),
+		static_cast<uint8_t>(finalColor.b * 255));
+
+	
+}
 bool Renderer::SaveBufferToImage() const
 {
 	return SDL_SaveBMP(m_pBuffer, "RayTracing_Buffer.bmp");
