@@ -114,28 +114,29 @@ namespace dae
 			//}
 			//const float t{ Vector3::Dot(triangle.v0 - ray.origin, triangle.normal) / dotValue };
 
+			//const Vector3 P{ ray.origin + ray.direction * t };
 
-			//Won 12 frames with this
-			/*Vector3 e{ triangle.v1 - triangle.v0 };
-			Vector3 p{ P - triangle.v0 };
-			if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) return false;
+			////Won 12 frames with this
+			//Vector3 e{ triangle.v1 - triangle.v0 };
+			//Vector3 p{ P - triangle.v0 };
+			//if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) return false;
 
-			e = triangle.v2 - triangle.v1;
-			p = P - triangle.v1;
-			if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) return false;
+			//e = triangle.v2 - triangle.v1;
+			//p = P - triangle.v1;
+			//if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) return false;
 
-			e = triangle.v0 - triangle.v2;
-			p = P - triangle.v2;
-			if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) return false;
-			
-			if (!ignoreHitRecord)
-			{
-				hitRecord.t = t;
-				hitRecord.didHit = true;
-				hitRecord.origin = P;
-				hitRecord.normal = triangle.normal;
-				hitRecord.materialIndex = triangle.materialIndex;
-			}*/
+			//e = triangle.v0 - triangle.v2;
+			//p = P - triangle.v2;
+			//if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) return false;
+			//
+			//if (!ignoreHitRecord)
+			//{
+			//	hitRecord.t = t;
+			//	hitRecord.didHit = true;
+			//	hitRecord.origin = P;
+			//	hitRecord.normal = triangle.normal;
+			//	hitRecord.materialIndex = triangle.materialIndex;
+			//}
 
 			///////////////////////////////////////////////////////////////////////////
 			//Trumbore

@@ -87,36 +87,39 @@ namespace dae
 					TransformForwardVector();
 				}
 			}
-			if (mouseState == SDL_BUTTON(SDL_BUTTON_LEFT))
+			
+			if(mouseState == SDL_BUTTON(SDL_BUTTON_LEFT))
 			{
-				if (mouseY != 0)
-				{
-					origin += forward * float(-mouseY) * translateSpeed * deltaTime;
-				}
+				if (mouseY != 0) origin += forward * float(-mouseY) * translateSpeed * deltaTime;
+
 				if (mouseX != 0)
 				{
 					totalYaw += mouseX;
 					TransformForwardVector();
 				}
 			}
+			if (mouseState == (SDL_BUTTON(SDL_BUTTON_LEFT) | SDL_BUTTON(SDL_BUTTON_RIGHT)))
+			{
+				if (mouseY != 0) origin.y += mouseY * translateSpeed * deltaTime;
+			}
 			
 		}
 
 		void HandleKeyMovement(const uint8_t* keys, float elapsedSec)
 		{
-			if (keys[SDL_SCANCODE_W])
+			if (keys[SDL_SCANCODE_W] || keys[SDL_SCANCODE_UP])
 			{
 				origin += forward * translateSpeed * elapsedSec;
 			}
-			if (keys[SDL_SCANCODE_S])
+			if (keys[SDL_SCANCODE_S] || keys[SDL_SCANCODE_DOWN])
 			{
 				origin -= forward * translateSpeed * elapsedSec;
 			}
-			if (keys[SDL_SCANCODE_D])
+			if (keys[SDL_SCANCODE_D] || keys[SDL_SCANCODE_RIGHT])
 			{
 				origin += right * translateSpeed * elapsedSec;
 			}
-			if (keys[SDL_SCANCODE_A])
+			if (keys[SDL_SCANCODE_A] || keys[SDL_SCANCODE_LEFT])
 			{
 				origin -= right * translateSpeed * elapsedSec;
 			}
