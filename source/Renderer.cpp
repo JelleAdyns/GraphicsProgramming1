@@ -25,8 +25,10 @@ Renderer::Renderer(SDL_Window * pWindow) :
 
 void Renderer::Render(Scene* pScene) const
 {
-	Camera& camera = pScene->GetCamera();
-	const float aspectRatio{ float(m_Width) / m_Height };
+	const Camera& camera = pScene->GetCamera();
+	const auto& materials{pScene->GetMaterials()};
+	const auto& lights{ pScene->GetLights() };
+	const float& aspectRatio{ float(m_Width) / m_Height };
 
 #if defined (PARALLEL_EXECUTION)
 	uint32_t amountOfPixels{ uint32_t(m_Width * m_Height) };
@@ -36,7 +38,7 @@ void Renderer::Render(Scene* pScene) const
 	
 	std::for_each(std::execution::par, pixelIndices.begin(), pixelIndices.end(), [&](int i)
 		{
-			RenderPixel(pScene, i, camera.fovScale, aspectRatio, camera.cameraToWorld, camera.origin);
+			RenderPixel(pScene, i, aspectRatio, camera, materials, lights);
 		});
 		
 	
@@ -45,7 +47,7 @@ void Renderer::Render(Scene* pScene) const
 
 	for (uint32_t pixelIndex{}; pixelIndex < amountOfPixels; ++pixelIndex)
 	{
-		RenderPixel(pScene, pixelIndex, camera.fovScale, aspectRatio, camera.cameraToWorld, camera.origin);
+		RenderPixel(pScene, i, aspectRatio, camera, materials, lights);
 	}
 #endif
 	
@@ -54,21 +56,19 @@ void Renderer::Render(Scene* pScene) const
 	//Update SDL Surface;
 	SDL_UpdateWindowSurface(m_pWindow);
 }
-void Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float aspectRatio, const Matrix& cameraToWorld, const Vector3& cameraOrigin) const
+void Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float aspectRatio, const Camera& camera, const std::vector<dae::Material*>& materials, const std::vector<dae::Light>& lights) const
 {
-	const auto& materials{ pScene->GetMaterials() };
-	const auto& lights{ pScene->GetLights() };
 	const uint32_t px{ pixelIndex % m_Width }, py{ pixelIndex / m_Width };
 
-	float z{ 1.f };
-	const float x{ (2 * (px + 0.5f) / m_Width - 1) * aspectRatio * fov };
-	const float y{ (1 - 2 * (py + 0.5f) / m_Height) * fov };
+	const float x{ (2 * (px + 0.5f) / m_Width - 1) * aspectRatio * camera.fovScale };
+	const float y{ (1 - 2 * (py + 0.5f) / m_Height) * camera.fovScale };
+	const float z{ 1.f };
 
-	Vector3 direction{ (cameraToWorld.TransformVector({ x,y,z })) };
+	Vector3 direction{ (camera.cameraToWorld.TransformVector({ x,y,z })) };
 
 	direction.Normalize();
 
-	const Ray ray{ cameraOrigin, direction };
+	const Ray ray{ camera.origin, direction };
 
 	ColorRGB finalColor{};
 	HitRecord closestHit{};
@@ -79,15 +79,6 @@ void Renderer::RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float 
 		Ray lightRay{ };
 		lightRay.origin = closestHit.origin + closestHit.normal * 0.001f;
 
-		/*if (lights.empty())
-		{
-			const float cosTheta = Vector3::Dot(closestHit.normal, -direction);
-			if (cosTheta > 0)
-			{
-				ColorRGB shade{ materials[closestHit.materialIndex]->Shade(closestHit, -direction, -direction) };
-				finalColor += shade * cosTheta;
-			}
-		}*/
 		for (int i = 0; i < lights.size(); ++i)
 		{
 			lightRay.direction = LightUtils::GetDirectionToLight(lights[i], lightRay.origin);

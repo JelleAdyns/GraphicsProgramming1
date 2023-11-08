@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include "DataTypes.h"
+#include "Material.h"
 
 struct SDL_Window;
 struct SDL_Surface;
@@ -10,6 +11,7 @@ struct SDL_Surface;
 namespace dae
 {
 	class Scene;
+	struct Camera;
 
 	class Renderer final
 	{
@@ -23,7 +25,7 @@ namespace dae
 		Renderer& operator=(Renderer&&) noexcept = delete;
 
 		void Render(Scene* pScene) const;
-		void RenderPixel(Scene* pScene, uint32_t pixelIndex, float fov, float aspectRatio, const Matrix& cameraToWorld, const Vector3& cameraOrigin ) const;
+		void RenderPixel(Scene* pScene, uint32_t pixelIndex, float aspectRatioconst, const Camera& camera, const std::vector<dae::Material*>& materials, const std::vector<dae::Light>& lights) const;
 		bool SaveBufferToImage() const;
 
 		void CycleLightingMode();
@@ -49,5 +51,6 @@ namespace dae
 
 		int m_Width{};
 		int m_Height{};
+
 	};
 }

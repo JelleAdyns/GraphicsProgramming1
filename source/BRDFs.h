@@ -99,7 +99,7 @@ namespace dae
 		static float GeometryFunction_Smith(const Vector3& n, const Vector3& v, const Vector3& l, float roughness)
 		{
 			//todo: W3
-			return {GeometryFunction_SchlickGGX(n,v,roughness)* GeometryFunction_SchlickGGX(n,l,roughness)};
+			return GeometryFunction_SchlickGGX(n,v,roughness)* GeometryFunction_SchlickGGX(n,l,roughness);
 		}
 
 	}

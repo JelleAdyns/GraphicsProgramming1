@@ -104,7 +104,6 @@ namespace dae
 		Material_CookTorrence(const ColorRGB& albedo, bool metalness, float roughness):
 			m_Albedo(albedo), m_Metalness(metalness), m_Roughness(roughness)
 		{
-			//if (AreEqual(m_Roughness, 0)) m_Roughness = 0.01f;
 		}
 
 		ColorRGB Shade(const HitRecord& hitRecord = {}, const Vector3& l = {}, const Vector3& v = {}) override
@@ -121,7 +120,7 @@ namespace dae
 			ColorRGB D{ BRDF::NormalDistribution_GGX(n, halfVector, m_Roughness) * colors::White };
 			ColorRGB F{ BRDF::FresnelFunction_Schlick(halfVector, v, m_Metalness ? m_Albedo : ColorRGB{0.04f, 0.04f, 0.04f})};
 			ColorRGB G{ BRDF::GeometryFunction_Smith(n, v, l, m_Roughness) * colors::White };
-			const ColorRGB specular{ (D * F * G) / denominator };
+			const ColorRGB specular{ D * F * G / denominator };
 
 			const ColorRGB kd{ m_Metalness ? ColorRGB{0,0,0} :ColorRGB{1,1,1} - F};
 			return  BRDF::Lambert(kd, m_Albedo) + specular;

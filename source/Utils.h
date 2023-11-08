@@ -20,14 +20,10 @@ namespace dae
 			const float discriminant{ b * b - c };
 
 			if (discriminant <= 0) return false;
-		
-			const float squareRoot{ sqrt(discriminant) };
 
-			const float t{ (-b - squareRoot) };
+			const float t{ (-b - sqrt(discriminant)) };
 
-			if (t < ray.min) return false;
-			if (t > ray.max) return false; 
-			if (t > hitRecord.t) return false;
+			if (t < ray.min || t > ray.max || t > hitRecord.t) return false;
 			
 			if (!ignoreHitRecord)
 			{
@@ -59,9 +55,7 @@ namespace dae
 
 			const float t{ Vector3::Dot(plane.origin - ray.origin, plane.normal) / dotValue };
 
-			if (t < ray.min) return false;
-			if (t > ray.max) return false;
-			if (t > hitRecord.t) return false;
+			if (t < ray.min || t > ray.max || t > hitRecord.t) return false;
 
 			if(!ignoreHitRecord)
 			{
@@ -180,9 +174,7 @@ namespace dae
 
 			const float t = Vector3::Dot(e2, Q) / det;
 
-			if (t < ray.min) return false;
-			if (t > ray.max) return false;
-			if (t > hitRecord.t) return false;
+			if (t < ray.min || t > ray.max || t > hitRecord.t) return false;
 
 			if (!ignoreHitRecord)
 			{
@@ -248,7 +240,7 @@ namespace dae
 				///////////////////////////////////////////////////////////////////////////
 				//Geometric
 				///////////////////////////////////////////////////////////////////////////
-				//const float dotValue{ Vector3::Dot(ray.direction, triangle.normal) };
+				//const float dotValue{ Vector3::Dot(ray.direction, mesh.transformedNormals[i])};
 				//switch (mesh.cullMode)
 				//{
 				//case TriangleCullMode::FrontFaceCulling:
@@ -269,7 +261,7 @@ namespace dae
 				//	if (AreEqual(dotValue, 0)) continue;
 				//	break;
 				//}
-				//const float t{ Vector3::Dot(triangle.v0 - ray.origin, triangle.normal) / dotValue };
+				//const float t{ Vector3::Dot(triangle.v0 - ray.origin,mesh.transformedNormals[i]) / dotValue };
 
 				//if (t < ray.min) continue;
 				//if (t > ray.max) continue;
@@ -280,23 +272,23 @@ namespace dae
 				////Won 12 frames with this
 				//Vector3 e{ triangle.v1 - triangle.v0 };
 				//Vector3 p{ P - triangle.v0 };
-				//if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) continue;
+				//if (Vector3::Dot(Vector3::Cross(e, p), mesh.transformedNormals[i]) <= 0) continue;
 
 				//e = triangle.v2 - triangle.v1;
 				//p = P - triangle.v1;
-				//if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) continue;
+				//if (Vector3::Dot(Vector3::Cross(e, p), mesh.transformedNormals[i]) <= 0) continue;
 
 				//e = triangle.v0 - triangle.v2;
 				//p = P - triangle.v2;
-				//if (Vector3::Dot(Vector3::Cross(e, p), triangle.normal) <= 0) continue;
+				//if (Vector3::Dot(Vector3::Cross(e, p), mesh.transformedNormals[i]) <= 0) continue;
 				// 
 				//if (!ignoreHitRecord)
 				//{
 				//	hitRecord.t = t;
 				//	hitRecord.didHit = true;
 				//	hitRecord.origin = P;
-				//	hitRecord.normal = triangle.normal;
-				//	hitRecord.materialIndex = triangle.materialIndex;
+				//	hitRecord.normal = mesh.transformedNormals[i];
+				//	hitRecord.materialIndex = mesh.materialIndex;
 				//}
 				 
 				 
